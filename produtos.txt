@@ -1,0 +1,5 @@
+111;açúcar;pacote de 2kg com açúcar refinado;12.50;300
+112;batata frita congelada;pacote de 1,5kg de batatas cortadas e congeladas prontas para fritar;28.90;100
+113;leite;caixa com 1l de leite;5.00;300
+114;biscoito;pacote com biscoito recheado sabor chocolate;4.00;200
+115;café;pacote de 500g de café moído;30.00;13

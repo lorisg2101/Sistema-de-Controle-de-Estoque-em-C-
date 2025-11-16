@@ -6,11 +6,16 @@
 #define MAX 50
 
 // Declaração de variáveis
-int codigos[MAX]; //"MAX" está relacionado ao "#define MAX 50", permitindo apenas 50 códigos nesse caso.
-char nomes[MAX][30];
-char descricoes[MAX][100];
-float precos[MAX];
-int quantidades[MAX];
+typedef struct // A struct Produto agrupa vários dados (código, nome, preço etc.) em um único tipo.
+{
+    int codigo;
+    char nome[30];
+    char descricao[100];
+    float preco;
+    int quantidade;
+} Produto;
+
+Produto produtos[MAX]; //"MAX" está relacionado ao "#define MAX 50", permitindo apenas 50 códigos nesse caso.
 int totalProdutos = 0;
 
 // Incrementando as funções de persistência de dados
@@ -29,7 +34,9 @@ void salvarDados()
     for (int i = 0; i < totalProdutos; i++)
     {
         fprintf(arquivo, "%d;%s;%s;%.2f;%d\n",
-                codigos[i], nomes[i], descricoes[i], precos[i], quantidades[i]);
+                produtos[i].codigo, produtos[i].nome,
+                produtos[i].descricao, produtos[i].preco,
+                produtos[i].quantidade);
     }
 
     fclose(arquivo);
@@ -45,9 +52,13 @@ void carregarDados()
         return;
     }
 
-    while (fscanf(arquivo, "%d;%29[^;];%99[^;];%f;%d\n",
-                  &codigos[totalProdutos], nomes[totalProdutos], descricoes[totalProdutos],
-                  &precos[totalProdutos], &quantidades[totalProdutos]) == 5)
+    while (totalProdutos < MAX &&
+           fscanf(arquivo, "%d;%29[^;];%99[^;];%f;%d\n",
+                  &produtos[totalProdutos].codigo,
+                  produtos[totalProdutos].nome,
+                  produtos[totalProdutos].descricao,
+                  &produtos[totalProdutos].preco,
+                  &produtos[totalProdutos].quantidade) == 5)
     {
         totalProdutos++;
     }
@@ -86,8 +97,14 @@ int main()
         printf("0. Sair\n");
         printf("--------------------------------------------------\n");
         printf("Escolha uma opção: ");
-        scanf("%d", &opcao);
-        printf("--------------------------------------------------\n");
+
+        if (scanf("%d", &opcao) != 1)
+        {
+            // Limpa entrada inválida
+            while (getchar() != '\n')
+                ;
+            opcao = -1;
+        }
 
         switch (opcao)
         {
@@ -97,13 +114,15 @@ int main()
             {
                 int codigoDuplicado = 0;
                 int novoCodigo;
+                Produto novoProduto;
+
                 printf("\n--- Cadastro de Produto ---\n");
                 printf("Código: ");
                 scanf("%d", &novoCodigo);
 
                 for (int i = 0; i < totalProdutos; i++)
                 {
-                    if (codigos[i] == novoCodigo)
+                    if (produtos[i].codigo == novoCodigo)
                     {
                         codigoDuplicado = 1;
                         break;
@@ -116,31 +135,41 @@ int main()
                     break;
                 }
 
-                codigos[totalProdutos] = novoCodigo;
+                novoProduto.codigo = novoCodigo;
 
                 printf("Nome: ");
-                scanf(" %[^\n]", nomes[totalProdutos]);
+                scanf(" %[^\n]", novoProduto.nome);
 
                 printf("Descrição: ");
-                scanf(" %[^\n]", descricoes[totalProdutos]);
+                scanf(" %[^\n]", novoProduto.descricao);
 
                 do
                 {
                     printf("Preço: ");
-                    scanf("%f", &precos[totalProdutos]);
-                    if (precos[totalProdutos] < 0)
+                    if (scanf("%f", &novoProduto.preco) != 1)
+                    {
+                        while (getchar() != '\n')
+                            ;
+                        novoProduto.preco = -1;
+                    }
+                    if (novoProduto.preco < 0)
                         printf("Preço inválido! Digite um valor positivo.\n");
-                } while (precos[totalProdutos] < 0);
+                } while (novoProduto.preco < 0);
 
                 do
                 {
                     printf("Quantidade em estoque: ");
-                    scanf("%d", &quantidades[totalProdutos]);
-                    if (quantidades[totalProdutos] < 0)
+                    if (scanf("%d", &novoProduto.quantidade) != 1)
+                    {
+                        while (getchar() != '\n')
+                            ;
+                        novoProduto.quantidade = -1;
+                    }
+                    if (novoProduto.quantidade < 0)
                         printf("Quantidade inválida! Digite um valor positivo.\n");
-                } while (quantidades[totalProdutos] < 0);
+                } while (novoProduto.quantidade < 0);
 
-                totalProdutos++;
+                produtos[totalProdutos++] = novoProduto;
                 printf("Produto cadastrado com sucesso!\n");
                 salvarDados();
             }
@@ -160,10 +189,10 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (codigos[i] == codigo)
+                if (produtos[i].codigo == codigo)
                 {
                     printf("Código: %d | Nome: %s | Descrição: %s | Preço: R$ %.2f | Quantidade: %d\n",
-                           codigos[i], nomes[i], descricoes[i], precos[i], quantidades[i]);
+                           produtos[i].codigo, produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade);
                     encontrado = 1;
                 }
             }
@@ -184,10 +213,10 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (strstr(nomes[i], nomeBusca))
+                if (strstr(produtos[i].nome, nomeBusca))
                 {
                     printf("Código: %d | Nome: %s | Descrição: %s | Preço: %.2f | Quantidade: %d\n",
-                           codigos[i], nomes[i], descricoes[i], precos[i], quantidades[i]);
+                           produtos[i].codigo, produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade);
                     encontrado = 1;
                 }
             }
@@ -216,10 +245,10 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (precos[i] >= min && precos[i] <= max)
+                if (produtos[i].preco >= min && produtos[i].preco <= max)
                 {
                     printf("Código: %d | Nome: %s | Descrição: %s | Preço: %.2f | Quantidade: %d\n",
-                           codigos[i], nomes[i], descricoes[i], precos[i], quantidades[i]);
+                           produtos[i].codigo, produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade);
                     encontrado = 1;
                 }
             }
@@ -239,32 +268,42 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (codigos[i] == codigo)
+                if (produtos[i].codigo == codigo)
                 {
                     printf("Produto atual: %s | Descrição: %s | Preço: %.2f | Qtde: %d\n",
-                           nomes[i], descricoes[i], precos[i], quantidades[i]);
+                           produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade);
 
                     printf("Novo nome: ");
-                    scanf(" %[^\n]", nomes[i]);
+                    scanf(" %[^\n]", produtos[i].nome);
 
                     printf("Nova descrição: ");
-                    scanf(" %[^\n]", descricoes[i]);
+                    scanf(" %[^\n]", produtos[i].descricao);
 
                     do
                     {
                         printf("Novo preço: ");
-                        scanf("%f", &precos[i]);
-                        if (precos[i] < 0)
+                        if (scanf("%f", &produtos[i].preco) != 1)
+                        {
+                            while (getchar() != '\n')
+                                ;
+                            produtos[i].preco = -1;
+                        }
+                        if (produtos[i].preco < 0)
                             printf("Preço inválido! Digite um valor positivo.\n");
-                    } while (precos[i] < 0);
+                    } while (produtos[i].preco < 0);
 
                     do
                     {
                         printf("Nova quantidade: ");
-                        scanf("%d", &quantidades[i]);
-                        if (quantidades[i] < 0)
-                            printf("❌ Quantidade inválida! Digite um valor positivo.\n");
-                    } while (quantidades[i] < 0);
+                        if (scanf("%d", &produtos[i].quantidade) != 1)
+                        {
+                            while (getchar() != '\n')
+                                ;
+                            produtos[i].quantidade = -1;
+                        }
+                        if (produtos[i].quantidade < 0)
+                            printf(" Quantidade inválida! Digite um valor positivo.\n");
+                    } while (produtos[i].quantidade < 0);
 
                     printf("Produto atualizado com sucesso!\n");
                     salvarDados();
@@ -287,22 +326,17 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (codigos[i] == codigo)
+                if (produtos[i].codigo == codigo)
                 {
                     printf("Produto: %s | Descrição: %s | Preço: %.2f | Qtde: %d\n",
-                           nomes[i], descricoes[i], precos[i], quantidades[i]);
+                           produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade);
                     printf("Confirmar remoção (s/n)? ");
                     scanf(" %c", &confirma);
                     if (confirma == 's' || confirma == 'S')
                     {
-                        // Desloca os elementos do vetor para remover o produto
                         for (int j = i; j < totalProdutos - 1; j++)
                         {
-                            codigos[j] = codigos[j + 1];
-                            strcpy(nomes[j], nomes[j + 1]);
-                            strcpy(descricoes[j], descricoes[j + 1]);
-                            precos[j] = precos[j + 1];
-                            quantidades[j] = quantidades[j + 1];
+                            produtos[j] = produtos[j + 1];
                         }
                         totalProdutos--;
                         printf("Produto removido!\n");
@@ -313,7 +347,7 @@ int main()
                         printf("Remoção cancelada.\n");
                     }
                     encontrado = 1;
-                    break; // sai do loop depois de remover
+                    break;
                 }
             }
 
@@ -332,19 +366,24 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (codigos[i] == codigo)
+                if (produtos[i].codigo == codigo)
                 {
-                    printf("Produto: %s | Qtde atual: %d\n", nomes[i], quantidades[i]);
+                    printf("Produto: %s | Qtde atual: %d\n", produtos[i].nome, produtos[i].quantidade);
                     do
                     {
                         printf("Quantidade a adicionar: ");
-                        scanf("%d", &qtd);
+                        if (scanf("%d", &qtd) != 1)
+                        {
+                            while (getchar() != '\n')
+                                ;
+                            qtd = -1;
+                        }
                         if (qtd <= 0)
-                            printf("❌ Valor inválido! Digite um número positivo.\n");
+                            printf(" Valor inválido! Digite um número positivo.\n");
                     } while (qtd <= 0);
 
-                    quantidades[i] += qtd;
-                    printf("Nova quantidade: %d\n", quantidades[i]);
+                    produtos[i].quantidade += qtd;
+                    printf("Nova quantidade: %d\n", produtos[i].quantidade);
                     salvarDados();
                     encontrado = 1;
                 }
@@ -364,21 +403,26 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (codigos[i] == codigo)
+                if (produtos[i].codigo == codigo)
                 {
-                    printf("Produto: %s | Qtde atual: %d\n", nomes[i], quantidades[i]);
+                    printf("Produto: %s | Qtde atual: %d\n", produtos[i].nome, produtos[i].quantidade);
                     do
                     {
                         printf("Quantidade a remover: ");
-                        scanf("%d", &qtd);
+                        if (scanf("%d", &qtd) != 1)
+                        {
+                            while (getchar() != '\n')
+                                ;
+                            qtd = -1;
+                        }
                         if (qtd <= 0)
                             printf("Valor inválido! Digite um número positivo.\n");
                     } while (qtd <= 0);
 
-                    if (qtd <= quantidades[i])
+                    if (qtd <= produtos[i].quantidade)
                     {
-                        quantidades[i] -= qtd;
-                        printf("Nova quantidade: %d\n", quantidades[i]);
+                        produtos[i].quantidade -= qtd;
+                        printf("Nova quantidade: %d\n", produtos[i].quantidade);
                         salvarDados();
                     }
                     else
@@ -404,10 +448,10 @@ int main()
 
             for (int i = 0; i < totalProdutos; i++)
             {
-                if (quantidades[i] < limite)
+                if (produtos[i].quantidade < limite)
                 {
                     printf("%d - %s | Descrição: %s | Qtde: %d | Preço: %.2f\n",
-                           codigos[i], nomes[i], descricoes[i], quantidades[i], precos[i]);
+                           produtos[i].codigo, produtos[i].nome, produtos[i].descricao, produtos[i].quantidade, produtos[i].preco);
                     encontrado = 1;
                 }
             }
@@ -423,8 +467,8 @@ int main()
             for (int i = 0; i < totalProdutos; i++)
             {
                 printf("Código: %d | Nome: %s | Descrição: %s | Preço: %.2f | Qtde: %d | Total: R$ %.2f\n",
-                       codigos[i], nomes[i], descricoes[i], precos[i], quantidades[i],
-                       precos[i] * quantidades[i]);
+                       produtos[i].codigo, produtos[i].nome, produtos[i].descricao, produtos[i].preco, produtos[i].quantidade,
+                       produtos[i].preco * produtos[i].quantidade);
             }
             break;
 
@@ -433,7 +477,7 @@ int main()
             valorTotal = 0;
             for (int i = 0; i < totalProdutos; i++)
             {
-                valorTotal += precos[i] * quantidades[i];
+                valorTotal += produtos[i].preco * produtos[i].quantidade;
             }
             printf("\n--- Estatísticas do Estoque ---\n");
             printf("Produtos cadastrados: %d\n", totalProdutos);

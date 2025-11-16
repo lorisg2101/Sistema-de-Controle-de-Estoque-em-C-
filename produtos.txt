@@ -3,3 +3,4 @@
 113;leite;caixa com 1l de leite;5.00;300
 114;biscoito;pacote com biscoito recheado sabor chocolate;4.00;200
 115;café;pacote de 500g de café moído;30.00;13
+289;Batata;legume proveniente da terra;2.00;100
